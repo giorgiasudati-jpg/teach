@@ -66,7 +66,7 @@ label.q small{display:block;font-weight:400;color:var(--mute);margin-top:3px;fon
 .hd{padding:10px 0 16px}.hd p{margin:4px 0 0;color:var(--mute)}
 
 /* il mondo crema delle persone */
-.c{--mute:rgba(31,35,40,.66);--line:rgba(31,35,40,.18);background:var(--cream);color:var(--ink)}
+.c{--mute:rgba(31,35,40,.68);--line:rgba(31,35,40,.18);background:var(--sede,var(--cream));color:var(--ink)}
 .prep{border-radius:26px;padding:14px 16px 18px;margin-top:14px}
 .prep .top{display:grid;grid-template-columns:62px 1fr auto;gap:10px;align-items:center}
 .prep .fa svg,.mini svg{display:block;width:100%}
@@ -78,12 +78,15 @@ label.q small{display:block;font-weight:400;color:var(--mute);margin-top:3px;fon
 .kv{margin:12px 0 0;line-height:1.34}.kv .k{font-size:14px;font-weight:700;display:block;margin-bottom:3px}
 .prep .tag{margin-top:8px}
 .nota{border-left:3px solid currentColor;padding:1px 0 1px 11px;margin:8px 0}
-.pg{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding-bottom:34px}
-.pc{display:flex;flex-direction:column;align-items:center;border-radius:26px;padding:13px 8px 0;text-align:center;text-decoration:none;font-weight:700;font-size:16px;line-height:1.14;overflow:hidden}
-.pc:nth-child(even){transform:translateY(34px)}
-.pc small{display:block;font-weight:500;font-size:14px;margin-top:3px;color:var(--mute)}
-.pc svg{display:block;width:100%;margin-top:auto;padding-top:6px}
-.pc .tag{margin-top:6px}
+.pg{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+/* riquadri tutti identici: il nome occupa sempre due righe e il segnale ha il suo posto anche quando manca */
+.pc{display:flex;flex-direction:column;align-items:center;border-radius:18px;padding:10px 6px 0;text-align:center;text-decoration:none;font-weight:700;font-size:13.5px;line-height:1.14;overflow:hidden}
+.pc .nm{height:2.28em;display:flex;align-items:flex-end;justify-content:center}
+.pc small{font-weight:500;font-size:12px;line-height:1.2;margin-top:3px;color:var(--mute);height:1.2em;overflow:hidden}
+.pc .slot{height:21px;margin-top:3px;display:flex;align-items:center}
+.pc .tag{font-size:11px;padding:1px 6px;white-space:nowrap;background:var(--ink);color:var(--paper)}
+.pc .tag.alert{background:var(--alert);color:#1F2328}
+.pc svg{display:block;width:78%;max-width:108px;margin-top:2px}
 .hero{margin:0 calc(var(--gut)*-1);padding:6px var(--gut) 44px;text-align:center;position:relative;border-radius:0 0 0 0}
 .hero .bk{position:absolute;left:var(--gut);top:6px}
 .hero svg{display:block;width:210px;margin:0 auto}
@@ -138,10 +141,7 @@ summary{cursor:pointer;color:var(--mute);padding:8px 0;font-weight:600}
   .cols{display:grid;grid-template-columns:1fr 1fr;gap:0 44px;align-items:start}
   .cols>div>section:first-child{border-top:0}
   .giorno{display:grid;grid-template-columns:1fr 1fr;gap:0 16px;align-items:start}
-  .pg{grid-template-columns:repeat(5,1fr)}
-  /* lo sfalsamento va per colonna: la seconda e la quarta scendono sempre, così le righe non si scontrano */
-  .pc:nth-child(even){transform:none}
-  .pc:nth-child(5n+2),.pc:nth-child(5n+4){transform:translateY(34px)}
+  .pg{grid-template-columns:repeat(auto-fill,minmax(146px,1fr));gap:12px}
   .fg{grid-template-columns:repeat(4,1fr)}
   .hero{border-radius:28px;margin:0}.low{margin:-28px 0 0;padding:24px 24px 0}
 }
@@ -177,6 +177,8 @@ const AREE={"Repertorio":"#EE5540","Tecnica":"#7FCBD0","Manico":"#8FC797","Ritmi
 const CHIAVI=[["Armonia",["armoni","triadi","settima","intervalli","superlocria","aree","interscambio","teoria"]],["Improvvisazione",["impro","lick","target","blue note","trascri","chord melody","solo blues","vocabolario"]],["Lettura",["hal leonard","lettura","leavitt","notazione"]],["Manico",["penta","box","toniche","visualizz","caged","collegament","manico","note su","nomi delle note"]],["Tecnica",["riscald","1234","1324","plettr","polso","chopbuilder","chop builder","ditones","stetina","grady","tapping","hammer","pull","legato","sei note","sestine","warm up","stretching","metronomo"]],["Ritmica e accordi",["strumming","ritmic","movimenti","cambi","accordi","schem","arpegg","barré","masters","funk","acoustic workout","travis","giuliani","nile rodgers","hendrix"]]];
 function areaDi(f){const t=(f.titolo||"").toLowerCase();for(const[a,k]of CHIAVI)if(k.some(x=>t.includes(x)))return a;return f.tipo==="brano"?"Repertorio":"Tecnica";}
 const faceDi=a=>Ritratti.disegna(a.ritratto,a.nome);
+const SEDI={"SMM":"#E8B7A0","Discovery":"#AFC6E6","Privato":"#C9D7A8"};
+const sedeS=a=>SEDI[a.sede]?`--sede:${SEDI[a.sede]}`:"";
 
 /* ---------- letture ---------- */
 const lezioniDi=id=>lista("lezioni").filter(l=>l.allievo===id).sort((a,b)=>b.data.localeCompare(a.data));
@@ -207,7 +209,7 @@ function vOggi(){
 }
 function prep(a){
   const ob=a.obiettivo||{},u=ultima(a.id),ic=inCorso(a.id),rip=daRiportare(a.id);
-  return `<article class="prep c"><div class="top"><a class="fa" href="#/a/${a.id}">${faceDi(a)}</a><div><a class="nome" href="#/a/${a.id}">${esc(a.nome)}</a><div class="ora">${esc(a.ora||"Orario da mettere")}</div></div><button class="btn sm" data-a="nota" data-id="${a.id}">Nota</button></div>
+  return `<article class="prep c" style="${sedeS(a)}"><div class="top"><a class="fa" href="#/a/${a.id}">${faceDi(a)}</a><div><a class="nome" href="#/a/${a.id}">${esc(a.nome)}</a><div class="ora">${esc(a.ora||"Orario da mettere")}</div></div><button class="btn sm" data-a="nota" data-id="${a.id}">Nota</button></div>
   ${tags(segnali(a))}
   ${ob.stato==="definito"?`<p class="rotta">${esc(ob.testo)}</p>`:`<p class="rotta vuota">Coordinate da definire. <a href="#/c/${a.id}">Fermati qui</a></p>`}
   ${u?`<div class="kv"><span class="k">L'ultima volta, ${fd(u.data)}</span>${esc(u.testo)}${u.prossima?`<div class="nota small">Prossima volta: ${esc(u.prossima)}</div>`:""}</div>`:`<div class="kv"><span class="k">L'ultima volta</span><span class="mute">Nessuna lezione quest'anno. ${esc((a.storico||[]).slice(-1)[0]||"")}</span></div>`}
@@ -215,18 +217,19 @@ function prep(a){
   ${rip?`<div class="kv"><span class="k">Da riportare in vita</span><div class="mfs">${mf(rip)}</div><div class="row small" style="gap:16px;margin-top:2px"><button class="link" data-a="riprendo" data-id="${rip.id}">La riprendo</button><button class="link" data-a="rinvio" data-id="${rip.id}">Non ora</button></div></div>`:""}
   </article>`;
 }
-const cartaAllievo=a=>`<a class="pc c" href="#/a/${a.id}">${esc(a.nome)}<small>${esc(a.sede)}</small>${tags(segnali(a).slice(0,1))}${faceDi(a)}</a>`;
+const carta=(a,href)=>{const t=segnali(a).slice(0,1).map(([x,c])=>[x.replace(/^Fermo da (\d+) giorni$/,"Fermo $1 gg"),c]);return `<a class="pc c" style="${sedeS(a)}" href="${href}"><span class="nm">${esc(a.nome)}</span><small>${esc(a.sede)}</small><span class="slot">${tags(t)}</span>${faceDi(a)}</a>`;};
+const cartaAllievo=a=>carta(a,`#/a/${a.id}`);
 function righeAllievi(){const q=ui.q.trim().toLowerCase();return allievi().filter(a=>(ui.sede==="Tutti"||a.sede===ui.sede||(ui.sede==="Da chiarire"&&a.stato==="da_chiarire"))&&(!q||a.nome.toLowerCase().includes(q))).map(cartaAllievo).join("")||'<p class="mute">Nessun risultato.</p>';}
 function vAllievi(){
   return `<div class="hd"><h1>Allievi</h1></div><input id="cerca" type="search" placeholder="Cerca un nome" value="${esc(ui.q)}" autocomplete="off">
-  <div class="chips" style="margin:10px 0 16px">${["Tutti","SMM","Discovery","Privato","Da chiarire"].map(s=>`<button class="chip ${ui.sede===s?"on":""}" data-a="sede" data-s="${s}">${s}</button>`).join("")}</div><div id="righe" class="pg">${righeAllievi()}</div>`;
+  <div class="chips" style="margin:10px 0 16px">${["Tutti","SMM","Discovery","Privato","Da chiarire"].map(s=>`<button class="chip ${ui.sede===s?"on":""}" ${ui.sede===s&&SEDI[s]?`style="background:${SEDI[s]}"`:""} data-a="sede" data-s="${s}">${s}</button>`).join("")}</div><div id="righe" class="pg">${righeAllievi()}</div>`;
 }
 const faldone=f=>`<button class="f ${f.stato==="riprendere"?"pale":""}" style="--fc:${AREE[areaDi(f)]}" data-a="apriFilo" data-id="${f.id}"><span class="n">${esc(f.titolo)}</span><span class="s">${areaDi(f)}</span></button>`;
 function vProfilo(id){
   const a=D.allievi[id];if(!a)return'<p class="mute">Allievo non trovato.</p>';
   const ob=a.obiettivo||{},fl=filiDi(id),gr=s=>fl.filter(f=>f.stato===s),p=a.pacchetto||{},lz=lezioniDi(id),blocchi=lista("programma").sort((x,y)=>x.ordine-y.ordine),aree=[...new Set(blocchi.map(b=>b.area))];
   const f=(k,v,t="text")=>`<input type="${t}" data-f="allievi|${id}|${k}" value="${esc(v??"")}">`;
-  return `<div class="hero c"><a class="link bk" href="#/allievi">Allievi</a><button class="link camb" data-a="ritratto" data-id="${id}">${a.ritratto?"Cambia ritratto":"Fai il ritratto"}</button><div style="padding-top:30px">${faceDi(a)}</div></div>
+  return `<div class="hero c" style="${sedeS(a)}"><a class="link bk" href="#/allievi">Allievi</a><button class="link camb" data-a="ritratto" data-id="${id}">${a.ritratto?"Cambia ritratto":"Fai il ritratto"}</button><div style="padding-top:30px">${faceDi(a)}</div></div>
   <div class="low"><h1>${esc(a.nome)}</h1><p class="mute" style="margin:8px 0">${esc(a.sede)}${a.giorno!=null?", "+GIORNI[a.giorno].toLowerCase()+(a.ora?" "+a.ora:""):""}${p.fatte!=null?`, lezione ${p.fatte}${p.tot?" di "+p.tot:""}`:""}</p>
   <div class="row wrap">${tags(segnali(a))}</div>
   <div class="row wrap" style="margin-top:12px"><button class="btn sm" data-a="nota" data-id="${id}">Nota lampo</button>${a.classroom?`<a class="btn sm line" href="${esc(a.classroom)}" target="_blank" rel="noopener">Apri Classroom</a>`:""}</div>
@@ -263,7 +266,7 @@ function vProfilo(id){
 }
 function vCoordinate(){
   const a=allievi().filter(x=>x.stato!=="archiviato"),per=s=>a.filter(x=>(x.obiettivo?.stato||"da_definire")===s),def=per("definito").length,nx=prossimoObj();
-  const blocco=s=>per(s).length?`<section><h2>${statoObj[s]}, ${per(s).length}</h2><div class="pg">${per(s).map(x=>`<a class="pc c" href="#/c/${x.id}">${esc(x.nome)}<small>${s==="definito"?esc(x.obiettivo.testo):esc(x.sede)}</small>${faceDi(x)}</a>`).join("")}</div></section>`:"";
+  const blocco=s=>per(s).length?`<section><h2>${statoObj[s]}, ${per(s).length}</h2><div class="pg">${per(s).map(x=>carta(x,`#/c/${x.id}`)).join("")}</div></section>`:"";
   return `<div class="hd"><h1>Coordinate</h1></div><div class="row" style="align-items:flex-end;gap:12px"><div class="grande">${def}</div><div class="mute" style="padding-bottom:6px">su ${a.length}</div></div>
   <p class="mute" style="margin:12px 0">Un allievo alla volta, senza fretta. Da qui passa tutto il resto.</p>${nx?`<a class="btn wide" href="#/c/${nx}">Fermati su ${esc(D.allievi[nx].nome)}</a>`:""}
   ${blocco("in_riflessione")}${blocco("da_definire")}${blocco("definito")}`;
@@ -273,7 +276,7 @@ function vMomento(id){
   const a=D.allievi[id];if(!a)return'<p class="mute">Allievo non trovato.</p>';
   const o=a.obiettivo||{},lz=lezioniDi(id).filter(l=>l.stato!=="assente").slice(0,3),ic=inCorso(id),rp=filiDi(id).filter(f=>f.stato==="riprendere"),ds=filiDi(id).filter(f=>f.stato==="desiderato"),nx=prossimoObj(id);
   const q=(k,t,h,v,big)=>`<label class="q">${t}${h?`<small>${h}</small>`:""}</label>${big?`<textarea data-f="allievi|${id}|obiettivo.${k}">${esc(v)}</textarea>`:`<input type="text" data-f="allievi|${id}|obiettivo.${k}" value="${esc(v)}">`}`;
-  return `<div class="hero c"><a class="link bk" href="#/coordinate">Coordinate</a><div style="padding-top:30px">${faceDi(a)}</div></div>
+  return `<div class="hero c" style="${sedeS(a)}"><a class="link bk" href="#/coordinate">Coordinate</a><div style="padding-top:30px">${faceDi(a)}</div></div>
   <div class="low"><h1>${esc(a.nome)}</h1><p class="mute" style="margin:8px 0 0">${esc(a.sede)}. <a href="#/a/${id}">Profilo completo</a></p>
   <div class="cols"><div>
   <section style="border:0"><h2>Cosa ha chiesto</h2>${a.richieste?`<div class="nota">${esc(a.richieste)}</div>`:'<p class="mute">Non ha compilato il form: forse è la prima cosa da chiedere.</p>'}${(a.daAllievi||[]).map(x=>`<div class="nota small">${esc(x)}</div>`).join("")}${ds.length?`<details><summary>I brani della sua lista (${ds.length})</summary><p class="small">${ds.map(x=>esc(x.titolo)).join(", ")}</p></details>`:""}</section>
@@ -324,14 +327,14 @@ function apriFilo(id){
 }
 function apriBlocco(id){
   const b=D.programma[id],al=allievi().filter(x=>x.stato!=="archiviato"),o=al.filter(a=>(a.programma||{})[id]==="ok"),v=al.filter(a=>(a.programma||{})[id]==="visto");
-  const g=l=>`<div class="mini">${l.map(a=>`<a class="c" href="#/a/${a.id}" data-a="chiudi">${esc(a.nome.split(" ")[0])}${faceDi(a)}</a>`).join("")}</div>`;
+  const g=l=>`<div class="mini">${l.map(a=>`<a class="c" style="${sedeS(a)}" href="#/a/${a.id}" data-a="chiudi">${esc(a.nome.split(" ")[0])}${faceDi(a)}</a>`).join("")}</div>`;
   apriSheet(`${testaSheet(b.nome)}${o.length?`<h3>Consolidato</h3>${g(o)}`:""}${v.length?`<h3 style="margin-top:14px">Visto</h3>${g(v)}`:""}${!o.length&&!v.length?'<p class="mute">Ancora nessuno.</p>':""}`);
 }
 function apriRitratto(id){ui.rit=id;disegnaRitratto();}
 function disegnaRitratto(){
   const a=D.allievi[ui.rit],r=a.ritratto||{capelli:"calvo",barba:"no",occhiali:"no",dettaglio:"no",maglia:"nera"};
   const riga=(k,t)=>`<label class="q">${t}</label><div class="chips">${Ritratti.O[k].map(([v,n])=>`<button class="chip ${r[k]===v?"on":""}" data-a="pezzo" data-k="${k}" data-v="${v}">${n}</button>`).join("")}</div>`;
-  apriSheet(`${testaSheet(a.nome)}<div class="prev">${Ritratti.disegna(r,a.nome)}</div><label class="q">Capelli</label><div class="hair">${Ritratti.O.capelli.map(([v,n])=>`<button class="${r.capelli===v?"on":""}" data-a="pezzo" data-k="capelli" data-v="${v}">${Ritratti.disegna({...r,capelli:v},a.nome)}${n}</button>`).join("")}</div>${riga("barba","Barba")}${riga("occhiali","Occhiali")}${riga("dettaglio","Dettaglio")}${riga("maglia","Maglia")}<button class="btn wide" style="margin-top:20px" data-a="chiudi">Fatto</button>`);
+  apriSheet(`${testaSheet(a.nome)}<div class="prev" style="background:${SEDI[a.sede]||"var(--cream)"}">${Ritratti.disegna(r,a.nome)}</div><label class="q">Capelli</label><div class="hair">${Ritratti.O.capelli.map(([v,n])=>`<button class="${r.capelli===v?"on":""}" data-a="pezzo" data-k="capelli" data-v="${v}">${Ritratti.disegna({...r,capelli:v},a.nome)}${n}</button>`).join("")}</div>${riga("barba","Barba")}${riga("occhiali","Occhiali")}${riga("dettaglio","Dettaglio")}${riga("maglia","Maglia")}<button class="btn wide" style="margin-top:20px" data-a="chiudi">Fatto</button>`);
 }
 
 /* ---------- nota lampo ---------- */
