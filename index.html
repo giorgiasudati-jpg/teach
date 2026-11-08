@@ -1,0 +1,437 @@
+<!doctype html><html lang="it"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>TEACH</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="TEACH">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1F2328">
+<meta name="color-scheme" content="dark only">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Familjen+Grotesk:wght@400;500;600;700&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="demo.js"></script>
+<script src="ritratti.js"></script>
+<script src="store.js"></script>
+<style>
+/* Due mondi. Le persone sono a due colori: inchiostro e crema, con il ritratto. Ciò che si studia è un faldone colorato, in Anton.
+   Il colore del faldone ha un significato fisso: dice l'area di studio. Niente font a mano. */
+:root{--ink:#1F2328;--ink2:#2B3037;--cream:#DAD3C9;--paper:#EFE9DF;--on:#E9E3DA;--mute:rgba(233,227,218,.64);--line:rgba(233,227,218,.17);--alert:#EE5540;--rail:58px;--gut:14px;color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;background:var(--ink);color:var(--on);font-family:"Familjen Grotesk",-apple-system,BlinkMacSystemFont,sans-serif;font-size:17px;line-height:1.4;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+body{padding:0 0 calc(26px + env(safe-area-inset-bottom,0)) calc(var(--rail) + env(safe-area-inset-left,0))}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;touch-action:manipulation;transition:transform .08s,opacity .08s}
+button:active:not(:disabled){transform:scale(.97);opacity:.85}
+:focus-visible{outline:2px solid #7FCBD0;outline-offset:2px}
+a{color:inherit}
+main{max-width:640px;margin:0 auto;padding:0 var(--gut) 24px}
+h1,h2,h3{font-weight:700;margin:0;line-height:1.05;letter-spacing:-.01em}
+h1{font-size:36px}h2{font-size:23px;margin-bottom:12px}h3{font-size:17px}
+p{margin:0 0 10px}
+.mute{color:var(--mute)}.small{font-size:15px}
+section{padding:22px 0;border-top:1px solid var(--line)}
+section.flush{border-top:0}
+#top{max-width:640px;margin:0 auto;padding:calc(12px + env(safe-area-inset-top,0)) var(--gut) 8px;display:flex;justify-content:space-between;align-items:center}
+#top .word{font:400 19px Anton,sans-serif;letter-spacing:.03em}
+#sync{font-size:13px;color:var(--mute)}
+/* la colonna laterale: le voci si leggono dal basso verso l'alto, il pallino segna dove sei */
+#tabs{position:fixed;left:0;top:0;bottom:0;width:calc(var(--rail) + env(safe-area-inset-left,0));display:flex;flex-direction:column;background:#343A43;border-radius:0 30px 30px 0;padding:calc(18px + env(safe-area-inset-top,0)) 0 calc(18px + env(safe-area-inset-bottom,0)) env(safe-area-inset-left,0);z-index:5}
+#tabs button{flex:1;border:0;background:transparent;color:rgba(233,227,218,.62);font-weight:600;font-size:16px;display:flex;align-items:center;justify-content:center;width:100%;min-height:0;padding:0}
+#tabs button span{writing-mode:vertical-rl;transform:rotate(180deg);position:relative;white-space:nowrap}
+#tabs button.on{color:#fff;font-weight:700}
+#tabs button.on span:after{content:"";position:absolute;right:calc(100% + 6px);top:50%;width:7px;height:7px;margin-top:-3.5px;border-radius:50%;background:var(--cream)}
+.btn{border:0;background:var(--cream);color:var(--ink);border-radius:999px;padding:11px 20px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;min-height:50px;text-decoration:none}
+.btn.line{background:transparent;box-shadow:inset 0 0 0 1.5px var(--cream);color:var(--cream)}
+.btn.wide{width:100%}.btn.sm{min-height:42px;padding:7px 16px;font-size:15px}
+.link{background:none;border:0;padding:6px 0;color:var(--mute);text-decoration:underline;text-underline-offset:3px;font-size:15px}
+.row{display:flex;gap:10px;align-items:center}.row.sp{justify-content:space-between}.row.wrap{flex-wrap:wrap}.row>.grow{flex:1;min-width:0}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;background:var(--ink2);border-radius:999px;padding:4px}
+.seg button{border:0;background:transparent;border-radius:999px;min-height:44px;font-weight:600}
+.seg button.on{background:var(--cream);color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:0;box-shadow:inset 0 0 0 1.3px var(--line);border-radius:999px;padding:7px 13px;background:transparent;font-size:15px;min-height:38px}
+.chip.on{background:var(--cream);color:var(--ink);box-shadow:none;font-weight:700}
+.tag{display:inline-block;font-size:12.5px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--ink);color:var(--cream)}
+.tag.alert{background:var(--alert);color:#1F2328}
+textarea,input[type=text],input[type=date],input[type=number],input[type=time],input[type=email],input[type=password],input[type=search],select{width:100%;border:0;background:var(--ink2);border-radius:14px;padding:13px 14px;font-size:16px}
+textarea{min-height:92px;resize:vertical;line-height:1.4}
+label.q{display:block;font-weight:700;margin:18px 0 7px;line-height:1.25}
+label.q small{display:block;font-weight:400;color:var(--mute);margin-top:3px;font-size:15px}
+.hd{padding:10px 0 16px}.hd p{margin:4px 0 0;color:var(--mute)}
+
+/* il mondo crema delle persone */
+.c{--mute:rgba(31,35,40,.66);--line:rgba(31,35,40,.18);background:var(--cream);color:var(--ink)}
+.prep{border-radius:26px;padding:14px 16px 18px;margin-top:14px}
+.prep .top{display:grid;grid-template-columns:62px 1fr auto;gap:10px;align-items:center}
+.prep .fa svg,.mini svg{display:block;width:100%}
+.prep .fa{height:68px;overflow:hidden}
+.prep .nome{font-size:21px;font-weight:700;line-height:1.05;text-decoration:none;display:block}
+.prep .ora{font-size:15px;color:var(--mute)}
+.prep .btn{background:var(--ink);color:var(--cream)}
+.rotta{margin:12px 0 0;font-weight:700;line-height:1.25}.rotta.vuota{font-weight:400;color:var(--mute)}
+.kv{margin:12px 0 0;line-height:1.34}.kv .k{font-size:14px;font-weight:700;display:block;margin-bottom:3px}
+.prep .tag{margin-top:8px}
+.nota{border-left:3px solid currentColor;padding:1px 0 1px 11px;margin:8px 0}
+.pg{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding-bottom:34px}
+.pc{display:block;border-radius:26px;padding:13px 8px 0;text-align:center;text-decoration:none;font-weight:700;font-size:16px;line-height:1.14;overflow:hidden}
+.pc:nth-child(even){transform:translateY(34px)}
+.pc small{display:block;font-weight:500;font-size:14px;margin-top:3px;color:var(--mute)}
+.pc svg{display:block;width:100%;margin-top:6px}
+.pc .tag{margin-top:6px}
+.hero{margin:0 calc(var(--gut)*-1);padding:6px var(--gut) 44px;text-align:center;position:relative;border-radius:0 0 0 0}
+.hero .bk{position:absolute;left:var(--gut);top:6px}
+.hero svg{display:block;width:210px;margin:0 auto}
+.hero .camb{position:absolute;right:var(--gut);top:6px}
+.low{background:var(--ink);border-radius:28px 28px 0 0;margin:-28px calc(var(--gut)*-1) 0;padding:24px var(--gut) 0;position:relative}
+.low h1{font-size:38px}
+
+/* il mondo dei faldoni: il colore è l'area di studio */
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.f{--tab:16px;--fc:#7FCBD0;background:var(--fc);color:#141210;border:0;width:100%;clip-path:polygon(0 0,calc(40% - 12px) 0,40% var(--tab),100% var(--tab),100% 100%,0 100%);padding:calc(var(--tab) + 8px) 9px 10px;min-height:128px;display:flex;flex-direction:column;justify-content:space-between;align-items:center;text-align:center;text-decoration:none;font-family:inherit}
+.f .n{font:400 20px/1.08 Anton,sans-serif;text-transform:uppercase;margin:auto 0;overflow-wrap:anywhere}
+.f .s{font-size:13.5px;font-weight:700}
+.f.pale{background:color-mix(in srgb,var(--fc) 42%,var(--cream))}
+.f.xl{min-height:164px}.f.xl .n{font-size:27px}
+.mfs{display:flex;flex-wrap:wrap;gap:6px}
+.mf{--fc:#7FCBD0;background:var(--fc);color:#141210;border:0;font:400 14px/1.15 Anton,sans-serif;text-transform:uppercase;padding:10px 10px 6px;clip-path:polygon(0 0,18px 0,24px 5px,100% 5px,100% 100%,0 100%);text-align:left}
+.mf.pale{background:color-mix(in srgb,var(--fc) 42%,var(--paper))}
+.lez{padding:11px 0;border-top:1px solid var(--line)}
+.lez .h{display:flex;justify-content:space-between;gap:8px;font-size:14px;color:var(--mute)}
+.lez .x{margin-top:2px;line-height:1.36}
+details{margin-top:10px}
+summary{cursor:pointer;color:var(--mute);padding:8px 0;font-weight:600}
+.check{display:flex;gap:12px;align-items:flex-start;padding:10px 0;background:none;border:0;width:100%;text-align:left;line-height:1.3}
+.check .box{width:24px;height:24px;box-shadow:inset 0 0 0 1.6px currentColor;border-radius:7px;flex:none;display:grid;place-items:center;font-size:15px;line-height:1}
+.check.on .box{background:#8FC797;color:#141210;box-shadow:none}
+.check.on .x{text-decoration:line-through;opacity:.6}
+.grande{font-size:78px;font-weight:700;line-height:.95;letter-spacing:-.03em}
+.mini{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
+.mini a{border-radius:16px;text-decoration:none;padding:7px 4px 0;font-size:12.5px;font-weight:700;text-align:center;line-height:1.1;overflow:hidden}
+.mini svg{margin-top:4px}
+.prog .chip.vis{box-shadow:inset 0 0 0 2px var(--fc);font-weight:600}
+.prog .chip.ok{background:var(--fc);color:#141210;box-shadow:none;font-weight:700}
+#sheet{position:fixed;inset:0;background:rgba(10,12,14,.62);z-index:10;display:flex;align-items:flex-end;justify-content:center}
+#sheet .in{--mute:rgba(31,35,40,.66);--line:rgba(31,35,40,.18);background:var(--paper);color:var(--ink);width:100%;max-width:640px;max-height:92dvh;overflow:auto;border-radius:26px 26px 0 0;padding:20px var(--gut) calc(22px + env(safe-area-inset-bottom,0))}
+#sheet textarea,#sheet input,#sheet select{background:#fff}
+#sheet .seg{background:var(--cream)}#sheet .seg button.on{background:var(--ink);color:var(--paper)}
+#sheet .chip{box-shadow:inset 0 0 0 1.3px rgba(31,35,40,.3)}
+#sheet .chip.on{background:var(--ink);color:var(--paper)}
+#sheet .btn{background:var(--ink);color:var(--paper)}#sheet .btn.line{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--ink)}
+.prev{width:150px;margin:6px auto 0;background:var(--cream);border-radius:26px;padding:12px 10px 0;overflow:hidden}
+.prev svg{display:block;width:100%}
+.hair{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:7px}
+.hair button{border:0;background:var(--cream);border-radius:14px;padding:6px 4px 3px;font-size:12.5px;font-weight:600;line-height:1.1}
+.hair button.on{box-shadow:0 0 0 2.5px var(--ink)}
+.hair svg{display:block;width:100%;margin-bottom:2px}
+#toast{position:fixed;left:calc(50% + var(--rail)/2);transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0));background:var(--cream);color:var(--ink);padding:10px 18px;border-radius:999px;z-index:12;font-size:15px;font-weight:700;max-width:88vw}
+@media(min-width:980px){
+  :root{--rail:76px;--gut:24px}
+  #tabs button{font-size:18px}
+  .f .n{font-size:22px}.f.xl .n{font-size:32px}
+  main,#top{max-width:1100px}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:0 44px;align-items:start}
+  .cols>div>section:first-child{border-top:0}
+  .giorno{display:grid;grid-template-columns:1fr 1fr;gap:0 16px;align-items:start}
+  .pg{grid-template-columns:repeat(5,1fr)}
+  .fg{grid-template-columns:repeat(4,1fr)}
+  .hero{border-radius:28px;margin:0}.low{margin:-28px 0 0;padding:24px 24px 0}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style></head><body>
+<header id="top"><div class="word">TEACH</div><div id="sync"></div></header>
+<main id="m"><p class="mute">Carico…</p></main>
+<nav id="tabs" hidden></nav>
+<div id="sheet" hidden></div>
+<div id="toast" hidden></div>
+<input id="file" type="file" accept="application/json,.json" hidden>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const D={allievi:{},lezioni:{},fili:{},cose:{},programma:{}};
+const p2=n=>String(n).padStart(2,"0");
+const iso=d=>`${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`;
+const OGGI=()=>iso(new Date());
+const MESI=["gen","feb","mar","apr","mag","giu","lug","ago","set","ott","nov","dic"];
+const MESIL=["gennaio","febbraio","marzo","aprile","maggio","giugno","luglio","agosto","settembre","ottobre","novembre","dicembre"];
+const GIORNI=["Domenica","Lunedì","Martedì","Mercoledì","Giovedì","Venerdì","Sabato"];
+const fd=s=>{if(!s)return"";const[y,m,d]=s.split("-").map(Number);return`${d} ${MESI[m-1]}${y!==new Date().getFullYear()?" "+y:""}`;};
+const trascorsi=s=>Math.round((new Date(OGGI())-new Date(s))/864e5);
+const piu=g=>{const d=new Date();d.setDate(d.getDate()+g);return iso(d);};
+const clone=o=>JSON.parse(JSON.stringify(o));
+const lista=c=>Object.entries(D[c]).map(([id,v])=>({id,...v}));
+const allievi=()=>lista("allievi").sort((a,b)=>(a.ordine??99)-(b.ordine??99));
+const ui={giorno:null,sede:"Tutti",q:"",nota:null,rit:null};
+let pronti=false,sessione=null;
+
+/* il colore di un faldone dice sempre l'area di studio */
+const AREE={"Repertorio":"#EE5540","Tecnica":"#7FCBD0","Manico":"#8FC797","Ritmica e accordi":"#E8C95A","Lettura":"#C9A5C2","Armonia":"#6C9BD8","Improvvisazione":"#EB9A52"};
+const CHIAVI=[["Armonia",["armoni","triadi","settima","intervalli","superlocria","aree","interscambio","teoria"]],["Improvvisazione",["impro","lick","target","blue note","trascri","chord melody","solo blues","vocabolario"]],["Lettura",["hal leonard","lettura","leavitt","notazione"]],["Manico",["penta","box","toniche","visualizz","caged","collegament","manico","note su","nomi delle note"]],["Tecnica",["riscald","1234","1324","plettr","polso","chopbuilder","chop builder","ditones","stetina","grady","tapping","hammer","pull","legato","sei note","sestine","warm up","stretching","metronomo"]],["Ritmica e accordi",["strumming","ritmic","movimenti","cambi","accordi","schem","arpegg","barré","masters","funk","acoustic workout","travis","giuliani","nile rodgers","hendrix"]]];
+function areaDi(f){const t=(f.titolo||"").toLowerCase();for(const[a,k]of CHIAVI)if(k.some(x=>t.includes(x)))return a;return f.tipo==="brano"?"Repertorio":"Tecnica";}
+const faceDi=a=>Ritratti.disegna(a.ritratto,a.nome);
+
+/* ---------- letture ---------- */
+const lezioniDi=id=>lista("lezioni").filter(l=>l.allievo===id).sort((a,b)=>b.data.localeCompare(a.data));
+const filiDi=id=>lista("fili").filter(f=>f.allievo===id);
+const ultima=id=>lezioniDi(id).find(l=>l.stato!=="assente");
+const inCorso=id=>filiDi(id).filter(f=>f.stato==="attivo");
+function daRiportare(id){const o=OGGI();return filiDi(id).filter(f=>f.stato==="riprendere"&&(!f.rinvio||f.rinvio<=o)).sort((a,b)=>(a.toccato||"").localeCompare(b.toccato||""))[0];}
+function segnali(a){
+  const s=[],l=lezioniDi(a.id)[0],p=a.pacchetto||{};
+  if(a.stato==="da_chiarire")s.push(["Da chiarire","alert"]);
+  if(p.tot&&p.fatte>=p.tot)s.push(["Rinnovo","alert"]);
+  else if(p.tot&&p.tot<=12&&p.tot-p.fatte<=5)s.push([`Restano ${p.tot-p.fatte}`,""]);
+  if(a.stato==="attivo"&&l&&trascorsi(l.data)>=21)s.push([`Fermo da ${trascorsi(l.data)} giorni`,""]);
+  return s;
+}
+const tags=s=>s.map(([t,c])=>`<span class="tag ${c}">${esc(t)}</span>`).join(" ");
+const statoObj={in_riflessione:"Ci stai ragionando",da_definire:"Da definire",definito:"Definite"};
+const prossimoGiorno=()=>{const g=new Date().getDay();return [2,4,6].find(x=>x>=g)??2;};
+const dataDel=g=>{const d=new Date(),o=d.getDay();d.setDate(d.getDate()+((g-o+7)%7));return d;};
+const mf=f=>`<button class="mf ${f.stato==="riprendere"?"pale":""}" style="--fc:${AREE[areaDi(f)]}" data-a="apriFilo" data-id="${f.id}">${esc(f.titolo)}</button>`;
+
+/* ---------- schermate ---------- */
+function vOggi(){
+  const g=ui.giorno??prossimoGiorno(),d=dataDel(g),a=allievi().filter(x=>x.giorno===g&&x.stato==="attivo").sort((x,y)=>(x.ora||"99").localeCompare(y.ora||"99"));
+  return `<div class="hd"><h1>${GIORNI[g]}</h1><p>${d.getDate()} ${MESIL[d.getMonth()]}, ${a.length} ${a.length===1?"lezione":"lezioni"}</p></div>
+  <div class="seg">${[[2,"Martedì"],[4,"Giovedì"],[6,"Sabato"]].map(([x,n])=>`<button class="${x===g?"on":""}" data-a="giorno" data-g="${x}">${n}</button>`).join("")}</div>
+  <div class="giorno">${a.map(prep).join("")||'<p class="mute" style="margin-top:16px">Nessun allievo in questo giorno.</p>'}</div>`;
+}
+function prep(a){
+  const ob=a.obiettivo||{},u=ultima(a.id),ic=inCorso(a.id),rip=daRiportare(a.id);
+  return `<article class="prep c"><div class="top"><a class="fa" href="#/a/${a.id}">${faceDi(a)}</a><div><a class="nome" href="#/a/${a.id}">${esc(a.nome)}</a><div class="ora">${esc(a.ora||"Orario da mettere")}</div></div><button class="btn sm" data-a="nota" data-id="${a.id}">Nota</button></div>
+  ${tags(segnali(a))}
+  ${ob.stato==="definito"?`<p class="rotta">${esc(ob.testo)}</p>`:`<p class="rotta vuota">Coordinate da definire. <a href="#/c/${a.id}">Fermati qui</a></p>`}
+  ${u?`<div class="kv"><span class="k">L'ultima volta, ${fd(u.data)}</span>${esc(u.testo)}${u.prossima?`<div class="nota small">Prossima volta: ${esc(u.prossima)}</div>`:""}</div>`:`<div class="kv"><span class="k">L'ultima volta</span><span class="mute">Nessuna lezione quest'anno. ${esc((a.storico||[]).slice(-1)[0]||"")}</span></div>`}
+  ${ic.length?`<div class="kv"><span class="k">In corso</span><div class="mfs">${ic.map(mf).join("")}</div></div>`:""}
+  ${rip?`<div class="kv"><span class="k">Da riportare in vita</span><div class="mfs">${mf(rip)}</div><div class="row small" style="gap:16px;margin-top:2px"><button class="link" data-a="riprendo" data-id="${rip.id}">La riprendo</button><button class="link" data-a="rinvio" data-id="${rip.id}">Non ora</button></div></div>`:""}
+  </article>`;
+}
+const cartaAllievo=a=>`<a class="pc c" href="#/a/${a.id}">${esc(a.nome)}<small>${esc(a.sede)}</small>${tags(segnali(a).slice(0,1))}${faceDi(a)}</a>`;
+function righeAllievi(){const q=ui.q.trim().toLowerCase();return allievi().filter(a=>(ui.sede==="Tutti"||a.sede===ui.sede||(ui.sede==="Da chiarire"&&a.stato==="da_chiarire"))&&(!q||a.nome.toLowerCase().includes(q))).map(cartaAllievo).join("")||'<p class="mute">Nessun risultato.</p>';}
+function vAllievi(){
+  return `<div class="hd"><h1>Allievi</h1></div><input id="cerca" type="search" placeholder="Cerca un nome" value="${esc(ui.q)}" autocomplete="off">
+  <div class="chips" style="margin:10px 0 16px">${["Tutti","SMM","Discovery","Privato","Da chiarire"].map(s=>`<button class="chip ${ui.sede===s?"on":""}" data-a="sede" data-s="${s}">${s}</button>`).join("")}</div><div id="righe" class="pg">${righeAllievi()}</div>`;
+}
+const faldone=f=>`<button class="f ${f.stato==="riprendere"?"pale":""}" style="--fc:${AREE[areaDi(f)]}" data-a="apriFilo" data-id="${f.id}"><span class="n">${esc(f.titolo)}</span><span class="s">${areaDi(f)}</span></button>`;
+function vProfilo(id){
+  const a=D.allievi[id];if(!a)return'<p class="mute">Allievo non trovato.</p>';
+  const ob=a.obiettivo||{},fl=filiDi(id),gr=s=>fl.filter(f=>f.stato===s),p=a.pacchetto||{},lz=lezioniDi(id),blocchi=lista("programma").sort((x,y)=>x.ordine-y.ordine),aree=[...new Set(blocchi.map(b=>b.area))];
+  const f=(k,v,t="text")=>`<input type="${t}" data-f="allievi|${id}|${k}" value="${esc(v??"")}">`;
+  return `<div class="hero c"><a class="link bk" href="#/allievi">Allievi</a><button class="link camb" data-a="ritratto" data-id="${id}">${a.ritratto?"Cambia ritratto":"Fai il ritratto"}</button><div style="padding-top:30px">${faceDi(a)}</div></div>
+  <div class="low"><h1>${esc(a.nome)}</h1><p class="mute" style="margin:8px 0">${esc(a.sede)}${a.giorno!=null?", "+GIORNI[a.giorno].toLowerCase()+(a.ora?" "+a.ora:""):""}${p.fatte!=null?`, lezione ${p.fatte}${p.tot?" di "+p.tot:""}`:""}</p>
+  <div class="row wrap">${tags(segnali(a))}</div>
+  <div class="row wrap" style="margin-top:12px"><button class="btn sm" data-a="nota" data-id="${id}">Nota lampo</button>${a.classroom?`<a class="btn sm line" href="${esc(a.classroom)}" target="_blank" rel="noopener">Apri Classroom</a>`:""}</div>
+  <div class="cols" style="margin-top:6px"><div>
+  <section><h2>Coordinate</h2>${ob.stato==="definito"?`<p style="font-size:21px;font-weight:700;line-height:1.2">${esc(ob.testo)}</p>${ob.prova?`<p class="small"><span class="mute">Ve ne accorgerete da:</span> ${esc(ob.prova)}</p>`:""}<a class="link" href="#/c/${id}">Rivedi</a>`:`<p class="mute">${ob.stato==="in_riflessione"?"Ci stai ragionando.":"Non ancora definite."}</p><a class="btn sm" href="#/c/${id}">Prenditi un momento</a>`}
+  <h3 style="margin-top:20px">Prossimi passi</h3>${(a.micro||[]).map((m,i)=>`<button class="check ${m.fatto?"on":""}" data-a="micro" data-id="${id}" data-i="${i}"><span class="box">${m.fatto?"✓":""}</span><span class="x">${esc(m.t)}</span></button>`).join("")||'<p class="mute small" style="margin-top:6px">Nessuno ancora.</p>'}
+  <div class="row" style="margin-top:8px"><input class="grow" id="micro-${id}" type="text" placeholder="Aggiungi un passo"><button class="btn sm" data-a="addMicro" data-id="${id}">Aggiungi</button></div></section>
+  </div><div>
+  <section><h2>Cosa ha chiesto</h2>${a.richieste?`<p>${esc(a.richieste)}</p>`:'<p class="mute">Non ha compilato il form.</p>'}${(a.daAllievi||[]).map(x=>`<div class="nota small">${esc(x)}</div>`).join("")}</section>
+  </div></div>
+  <section><h2>Sul tavolo</h2>${gr("attivo").length?`<div class="fg">${gr("attivo").map(faldone).join("")}</div>`:'<p class="mute small">Niente in corso.</p>'}
+  ${gr("riprendere").length?`<h3 style="margin:22px 0 12px">Da riprendere</h3><div class="fg">${gr("riprendere").map(faldone).join("")}</div>`:""}
+  ${gr("desiderato").length?`<details><summary>Brani che ha chiesto (${gr("desiderato").length})</summary><div class="chips" style="margin-top:6px">${gr("desiderato").map(x=>`<button class="chip" data-a="apriFilo" data-id="${x.id}">${esc(x.titolo)}</button>`).join("")}</div></details>`:""}
+  ${gr("chiuso").length?`<details><summary>Archiviati (${gr("chiuso").length})</summary><div class="chips" style="margin-top:6px">${gr("chiuso").map(x=>`<button class="chip" data-a="apriFilo" data-id="${x.id}">${esc(x.titolo)}</button>`).join("")}</div></details>`:""}
+  <div class="row" style="margin-top:14px"><input class="grow" id="filo-${id}" type="text" placeholder="Nuovo brano o argomento"><button class="btn sm" data-a="addFilo" data-id="${id}">Aggiungi</button></div></section>
+  <div class="cols"><div>
+  <section><h2>Come impara</h2><textarea data-f="allievi|${id}|comeImpara" placeholder="Cosa funziona con questa persona?">${esc(a.comeImpara)}</textarea>
+  <label class="q">Note private</label><textarea data-f="allievi|${id}|nota">${esc(a.nota)}</textarea></section>
+  <section><h2>Numeri</h2>${(a.numeri||[]).map(n=>`<div class="lez">${esc(n)}</div>`).join("")||'<p class="mute small">Nessun numero segnato.</p>'}<p class="small mute" style="margin-top:8px">Si aggiungono dalla nota lampo.</p></section>
+  </div><div>
+  <section><h2>Diario</h2>${lz.map(l=>`<div class="lez"><div class="h"><span>${fd(l.data)}, ${esc(l.titolo)}</span><span>${l.come?esc(l.come):l.stato==="assente"?"Assenza":l.stato==="da_recuperare"?"Da recuperare":""}</span></div><div class="x">${esc(l.testo)}</div></div>`).join("")||'<p class="mute">Nessuna lezione.</p>'}
+  ${(a.storico||[]).length?`<details><summary>Anni precedenti</summary>${a.storico.map(s=>`<div class="lez"><div class="x small">${esc(s)}</div></div>`).join("")}</details>`:""}</section>
+  </div></div>
+  <section><details class="prog"><summary>Programma</summary>${aree.map(ar=>`<h3 style="margin:14px 0 8px">${esc(ar)}</h3><div class="chips" style="--fc:${AREE[ar]}">${blocchi.filter(b=>b.area===ar).map(b=>{const st=(a.programma||{})[b.id];return`<button class="chip ${st==="ok"?"ok":st==="visto"?"vis":""}" data-a="prog" data-id="${id}" data-b="${b.id}">${esc(b.nome)}</button>`;}).join("")}</div>`).join("")}<p class="small mute" style="margin-top:10px">Un tocco: visto. Due: consolidato. Tre: togli.</p></details>
+  ${(a.daVerificare||[]).length?`<details><summary>Da verificare (${a.daVerificare.length})</summary>${a.daVerificare.map(x=>`<div class="lez small">${esc(x)}</div>`).join("")}</details>`:""}
+  <details><summary>Scheda</summary>
+  <label class="q">Giorno</label><select data-f="allievi|${id}|giorno" data-n="1"><option value="">Nessuno</option>${[1,2,3,4,5,6].map(g=>`<option value="${g}" ${a.giorno===g?"selected":""}>${GIORNI[g]}</option>`).join("")}</select>
+  <label class="q">Ora</label>${f("ora",a.ora,"time")}
+  <label class="q">Durata in minuti</label>${f("durata",a.durata,"number")}
+  <label class="q">Pacchetto</label>${f("pacchetto.etichetta",p.etichetta)}
+  <div class="row" style="margin-top:8px"><div class="grow"><label class="small mute">Lezioni fatte</label>${f("pacchetto.fatte",p.fatte,"number")}</div><div class="grow"><label class="small mute">Totale</label>${f("pacchetto.tot",p.tot,"number")}</div></div>
+  <label class="q">Stato</label><select data-f="allievi|${id}|stato">${[["attivo","Attivo"],["da_chiarire","Da chiarire"],["archiviato","Archiviato"]].map(([v,t])=>`<option value="${v}" ${a.stato===v?"selected":""}>${t}</option>`).join("")}</select>
+  </details></section></div>`;
+}
+function vCoordinate(){
+  const a=allievi().filter(x=>x.stato!=="archiviato"),per=s=>a.filter(x=>(x.obiettivo?.stato||"da_definire")===s),def=per("definito").length,nx=prossimoObj();
+  const blocco=s=>per(s).length?`<section><h2>${statoObj[s]}, ${per(s).length}</h2><div class="pg">${per(s).map(x=>`<a class="pc c" href="#/c/${x.id}">${esc(x.nome)}<small>${s==="definito"?esc(x.obiettivo.testo):esc(x.sede)}</small>${faceDi(x)}</a>`).join("")}</div></section>`:"";
+  return `<div class="hd"><h1>Coordinate</h1></div><div class="row" style="align-items:flex-end;gap:12px"><div class="grande">${def}</div><div class="mute" style="padding-bottom:6px">su ${a.length}</div></div>
+  <p class="mute" style="margin:12px 0">Un allievo alla volta, senza fretta. Da qui passa tutto il resto.</p>${nx?`<a class="btn wide" href="#/c/${nx}">Fermati su ${esc(D.allievi[nx].nome)}</a>`:""}
+  ${blocco("in_riflessione")}${blocco("da_definire")}${blocco("definito")}`;
+}
+function prossimoObj(dopo){const a=allievi().filter(x=>x.stato==="attivo"&&x.obiettivo?.stato!=="definito"),i=a.findIndex(x=>x.id===dopo);return (a[i+1]||(i<0?a[0]:a.find(x=>x.id!==dopo)))?.id;}
+function vMomento(id){
+  const a=D.allievi[id];if(!a)return'<p class="mute">Allievo non trovato.</p>';
+  const o=a.obiettivo||{},lz=lezioniDi(id).filter(l=>l.stato!=="assente").slice(0,3),ic=inCorso(id),rp=filiDi(id).filter(f=>f.stato==="riprendere"),ds=filiDi(id).filter(f=>f.stato==="desiderato"),nx=prossimoObj(id);
+  const q=(k,t,h,v,big)=>`<label class="q">${t}${h?`<small>${h}</small>`:""}</label>${big?`<textarea data-f="allievi|${id}|obiettivo.${k}">${esc(v)}</textarea>`:`<input type="text" data-f="allievi|${id}|obiettivo.${k}" value="${esc(v)}">`}`;
+  return `<div class="hero c"><a class="link bk" href="#/coordinate">Coordinate</a><div style="padding-top:30px">${faceDi(a)}</div></div>
+  <div class="low"><h1>${esc(a.nome)}</h1><p class="mute" style="margin:8px 0 0">${esc(a.sede)}. <a href="#/a/${id}">Profilo completo</a></p>
+  <div class="cols"><div>
+  <section style="border:0"><h2>Cosa ha chiesto</h2>${a.richieste?`<div class="nota">${esc(a.richieste)}</div>`:'<p class="mute">Non ha compilato il form: forse è la prima cosa da chiedere.</p>'}${(a.daAllievi||[]).map(x=>`<div class="nota small">${esc(x)}</div>`).join("")}${ds.length?`<details><summary>I brani della sua lista (${ds.length})</summary><p class="small">${ds.map(x=>esc(x.titolo)).join(", ")}</p></details>`:""}</section>
+  <section><h2>Dove siete adesso</h2>${lz.map(l=>`<div class="lez"><div class="h"><span>${fd(l.data)}</span></div><div class="x small">${esc(l.testo)}</div></div>`).join("")||'<p class="mute">Nessuna lezione recente.</p>'}
+  ${ic.length?`<div class="kv"><span class="k">In corso</span><div class="mfs">${ic.map(mf).join("")}</div></div>`:""}${rp.length?`<div class="kv"><span class="k">Rimasti indietro</span><div class="mfs">${rp.map(mf).join("")}</div></div>`:""}${(a.numeri||[]).length?`<div class="kv"><span class="k">Numeri</span>${a.numeri.map(esc).join("<br>")}</div>`:""}${a.comeImpara?`<div class="kv"><span class="k">Come impara</span>${esc(a.comeImpara)}</div>`:""}</section>
+  </div><div><section style="border:0"><h2>Le tue coordinate</h2>
+  ${q("testo",`Dove vuoi portare ${esc(a.nome.split(" ")[0])}?`,"Una frase. Quella che ti toglie la nebbia prima di una lezione.",o.testo,true)}
+  ${q("perche","Perché proprio questo, per questa persona?","",o.perche,true)}
+  ${q("prova","Come ve ne accorgerete?","Una cosa che si può vedere, sentire o misurare.",o.prova)}
+  ${q("entro","Entro quando?","",o.entro)}
+  <div class="row wrap" style="margin-top:18px"><button class="btn grow" data-a="objStato" data-id="${id}" data-s="definito">Sono queste</button><button class="btn line grow" data-a="objStato" data-id="${id}" data-s="in_riflessione">Ci penso ancora</button></div>
+  ${o.bozza?`<details style="margin-top:20px"><summary>Apri la bozza di Theo</summary><div class="nota small"><b>${esc(o.bozza)}</b>${o.bozzaBrani?`<br><span class="mute">Brani:</span> ${esc(o.bozzaBrani)}`:""}${o.bozzaProva?`<br><span class="mute">Progresso:</span> ${esc(o.bozzaProva)}`:""}${o.bozzaDubbio?`<br><span class="mute">Dubbio:</span> ${esc(o.bozzaDubbio)}`:""}</div></details>`:""}
+  ${nx?`<a class="btn line wide" style="margin-top:20px" href="#/c/${nx}">Prossimo: ${esc(D.allievi[nx].nome)}</a>`:""}
+  </section></div></div></div>`;
+}
+function vProgramma(area){
+  const b=lista("programma").sort((x,y)=>x.ordine-y.ordine),aree=[...new Set(b.map(x=>x.area))];
+  if(area){
+    const ar=decodeURIComponent(area),al=allievi().filter(x=>x.stato!=="archiviato");
+    return `<div class="hd"><a class="link" href="#/programma">Programma</a><h1 style="margin-top:6px">${esc(ar)}</h1></div><div class="fg">${b.filter(x=>x.area===ar).map(x=>{const v=al.filter(a=>(a.programma||{})[x.id]).length;return`<button class="f" style="--fc:${AREE[ar]}" data-a="apriBlocco" data-id="${x.id}"><span class="n">${esc(x.nome)}</span><span class="s">${v} ${v===1?"allievo":"allievi"}</span></button>`;}).join("")}</div>`;
+  }
+  return `<div class="hd"><h1>Programma</h1><p>Il percorso che esiste già nelle tue schede.</p></div><div class="fg">${aree.map(ar=>{const n=b.filter(x=>x.area===ar).length;return`<a class="f xl" style="--fc:${AREE[ar]}" href="#/programma/${encodeURIComponent(ar)}"><span class="n">${ar==="Improvvisazione"?"Impro":esc(ar)}</span><span class="s">${n} blocchi</span></a>`;}).join("")}</div>`;
+}
+const TIPI=[["rispondere","Da rispondere","#EE5540"],["mio","Tocca a te","#E8C95A"],["pacchetto","Pacchetti","#8FC797"],["recupero","Recuperi","#7FCBD0"],["decidere","Da decidere","#C9A5C2"],["sistemare","Da sistemare","#EB9A52"]];
+function vCose(tipo){
+  const c=lista("cose"),ap=c.filter(x=>!x.fatta),fa=c.filter(x=>x.fatta);
+  const riga=x=>`<button class="check ${x.fatta?"on":""}" data-a="cosa" data-id="${x.id}"><span class="box">${x.fatta?"✓":""}</span><span class="x">${x.allievo&&D.allievi[x.allievo]?`<b>${esc(D.allievi[x.allievo].nome)}</b>. `:""}${esc(x.testo)}</span></button>`;
+  if(tipo){const t=TIPI.find(x=>x[0]===tipo)||TIPI[1],r=ap.filter(x=>(x.tipo||"mio")===t[0]);return `<div class="hd"><a class="link" href="#/cose">Cose</a><h1 style="margin-top:6px">${t[1]}</h1></div>${r.map(riga).join("")||'<p class="mute">Tutto fatto.</p>'}`;}
+  return `<div class="hd"><h1>Cose</h1></div><div class="row" style="margin-bottom:18px"><input class="grow" id="nuova" type="text" placeholder="Aggiungi una cosa da fare"><button class="btn sm" data-a="addCosa">Aggiungi</button></div>
+  <div class="fg">${TIPI.map(([t,n,col])=>{const k=ap.filter(x=>(x.tipo||"mio")===t).length;return`<a class="f xl" style="--fc:${col}" href="#/cose/${t}"><span class="n">${n}</span><span class="s">${k?k+(k===1?" aperta":" aperte"):"Tutto fatto"}</span></a>`;}).join("")}</div>
+  ${fa.length?`<details><summary>Fatte (${fa.length})</summary>${fa.map(riga).join("")}</details>`:""}
+  <section style="margin-top:22px"><h2>Strumenti</h2><div class="row wrap"><button class="btn sm line" data-a="resoconto">Copia il resoconto per Theo</button><button class="btn sm line" data-a="importa">Importa dati</button><button class="btn sm line" data-a="esporta">Scarica una copia</button>${(!Store.OFF&&sessione)?'<button class="btn sm line" data-a="esci">Esci</button>':""}</div>
+  <p class="small mute" style="margin-top:10px">Importare aggiunge solo ciò che manca: non sovrascrive mai il tuo lavoro.</p></section>`;
+}
+function vAccesso(){
+  if(!Store.CONFIG)return`<div style="padding:40px 0"><h1>Teach</h1><p style="margin-top:16px">L'app non è ancora collegata al suo database.</p><a class="btn wide" href="?demo">Guarda con allievi finti</a></div>`;
+  return`<div style="padding:40px 0"><h1>Teach</h1><form id="login" style="margin-top:20px"><input type="email" id="em" placeholder="Email" autocomplete="username" style="margin-bottom:8px"><input type="password" id="pw" placeholder="Password" autocomplete="current-password" style="margin-bottom:12px"><button class="btn wide">Entra</button></form><p id="err" class="small" style="color:var(--alert);margin-top:10px"></p></div>`;
+}
+
+/* ---------- finestre dal basso ---------- */
+function apriSheet(h){const s=$("#sheet");s.hidden=false;s.innerHTML=`<div class="in">${h}</div>`;}
+function chiudi(){ui.nota=null;ui.rit=null;$("#sheet").hidden=true;$("#sheet").innerHTML="";}
+const testaSheet=t=>`<div class="row sp" style="margin-bottom:12px"><h2 style="margin:0">${esc(t)}</h2><button class="link" data-a="chiudi">Chiudi</button></div>`;
+function apriFilo(id){
+  const f=D.fili[id];if(!f)return;
+  const b=(s,t)=>`<button class="chip ${f.stato===s?"on":""}" data-a="filo" data-id="${id}" data-s="${s}">${t}</button>`;
+  apriSheet(`${testaSheet(f.titolo)}<p class="mute small" style="margin-top:-6px">${areaDi(f)}</p>${f.nota?`<div class="nota">${esc(f.nota)}</div>`:""}<div class="chips" style="margin-top:14px">${b("attivo","In corso")}${b("riprendere","Da riprendere")}${b("chiuso","Archiviato")}${f.stato==="desiderato"?b("desiderato","Ha chiesto"):""}</div>`);
+}
+function apriBlocco(id){
+  const b=D.programma[id],al=allievi().filter(x=>x.stato!=="archiviato"),o=al.filter(a=>(a.programma||{})[id]==="ok"),v=al.filter(a=>(a.programma||{})[id]==="visto");
+  const g=l=>`<div class="mini">${l.map(a=>`<a class="c" href="#/a/${a.id}" data-a="chiudi">${esc(a.nome.split(" ")[0])}${faceDi(a)}</a>`).join("")}</div>`;
+  apriSheet(`${testaSheet(b.nome)}${o.length?`<h3>Consolidato</h3>${g(o)}`:""}${v.length?`<h3 style="margin-top:14px">Visto</h3>${g(v)}`:""}${!o.length&&!v.length?'<p class="mute">Ancora nessuno.</p>':""}`);
+}
+function apriRitratto(id){ui.rit=id;disegnaRitratto();}
+function disegnaRitratto(){
+  const a=D.allievi[ui.rit],r=a.ritratto||{capelli:"calvo",barba:"no",occhiali:"no",dettaglio:"no",maglia:"nera"};
+  const riga=(k,t)=>`<label class="q">${t}</label><div class="chips">${Ritratti.O[k].map(([v,n])=>`<button class="chip ${r[k]===v?"on":""}" data-a="pezzo" data-k="${k}" data-v="${v}">${n}</button>`).join("")}</div>`;
+  apriSheet(`${testaSheet(a.nome)}<div class="prev">${Ritratti.disegna(r,a.nome)}</div><label class="q">Capelli</label><div class="hair">${Ritratti.O.capelli.map(([v,n])=>`<button class="${r.capelli===v?"on":""}" data-a="pezzo" data-k="capelli" data-v="${v}">${Ritratti.disegna({...r,capelli:v},a.nome)}${n}</button>`).join("")}</div>${riga("barba","Barba")}${riga("occhiali","Occhiali")}${riga("dettaglio","Dettaglio")}${riga("maglia","Maglia")}<button class="btn wide" style="margin-top:20px" data-a="chiudi">Fatto</button>`);
+}
+
+/* ---------- nota lampo ---------- */
+function apriNota(id){ui.nota={id,come:"",tocchi:[]};disegnaNota();}
+function disegnaNota(){
+  const n=ui.nota,a=D.allievi[n.id],fl=filiDi(n.id).filter(f=>f.stato==="attivo"||f.stato==="riprendere");
+  const v=id=>{const e=document.getElementById(id);return e?e.value:null;};
+  const keep={d:v("n-data")??OGGI(),t:v("n-testo")??"",p:v("n-prossima")??"",mc:v("n-mc")??"",mv:v("n-mv")??""};
+  apriSheet(`${testaSheet(a.nome)}<input id="n-data" type="date" value="${esc(keep.d)}">
+  <div class="seg" style="margin-top:12px">${["Bene","Così così","Fatica"].map(c=>`<button class="${n.come===c?"on":""}" data-a="come" data-c="${c}">${c}</button>`).join("")}</div>
+  <label class="q">Cosa avete fatto</label><textarea id="n-testo" placeholder="Anche dettata, due parole bastano">${esc(keep.t)}</textarea>
+  <label class="q">La prossima volta</label><input id="n-prossima" type="text" value="${esc(keep.p)}">
+  ${fl.length?`<label class="q">Argomenti toccati</label><div class="chips">${fl.map(f=>`<button class="chip ${n.tocchi.includes(f.id)?"on":""}" data-a="tocco" data-id="${f.id}">${esc(f.titolo)}</button>`).join("")}</div>`:""}
+  <label class="q">Un numero da ricordare</label><div class="row"><input id="n-mc" class="grow" type="text" placeholder="Es. 1324" value="${esc(keep.mc)}"><input id="n-mv" class="grow" type="text" placeholder="Es. 95 BPM in quarti" value="${esc(keep.mv)}"></div>
+  <div class="row" style="margin-top:18px"><button class="btn grow" data-a="salvaNota">Salva</button><button class="btn line" data-a="salvaAssente">Assenza</button></div>`);
+}
+function salvaNota(assente){
+  const n=ui.nota,g=id=>document.getElementById(id).value.trim(),data=g("n-data")||OGGI();
+  Store.add("lezioni",{allievo:n.id,data,titolo:"Nota",testo:assente?"Assenza.":g("n-testo"),stato:assente?"assente":"svolta",fonte:"nota",come:n.come,prossima:g("n-prossima")});
+  if(!assente){
+    n.tocchi.forEach(id=>{const f=D.fili[id];if(f)Store.set("fili",id,{...f,stato:"attivo",toccato:data,rinvio:null});});
+    const c=g("n-mc"),v=g("n-mv");
+    if(c&&v){const a=D.allievi[n.id];Store.set("allievi",n.id,{...a,numeri:[...(a.numeri||[]),`${c}: ${v} (${fd(data)})`]});}
+    const a=D.allievi[n.id],p=a.pacchetto||{};
+    if(p.fatte!=null)Store.set("allievi",n.id,{...a,pacchetto:{...p,fatte:p.fatte+1}});
+  }
+  chiudi();toast("Nota salvata");
+}
+
+/* ---------- strumenti ---------- */
+function toast(t){const e=$("#toast");e.textContent=t;e.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>e.hidden=true,2400);}
+function resoconto(){
+  const da=piu(-7),r=[`TEACH, resoconto per Theo, ${fd(OGGI())}`,"","NOTE DELLA SETTIMANA"];
+  lista("lezioni").filter(l=>l.fonte==="nota"&&l.data>=da).sort((a,b)=>a.data.localeCompare(b.data)).forEach(l=>{const a=D.allievi[l.allievo];r.push(`- ${a?.nome} (${fd(l.data)}${l.come?", "+l.come:""}): ${l.testo}${l.prossima?" | prossima volta: "+l.prossima:""}`);});
+  r.push("","COORDINATE DEFINITE");
+  allievi().filter(a=>a.obiettivo?.stato==="definito").forEach(a=>r.push(`- ${a.nome}: ${a.obiettivo.testo}`));
+  r.push("","DA FARE APERTE");
+  lista("cose").filter(c=>!c.fatta).forEach(c=>r.push(`- ${c.allievo?D.allievi[c.allievo]?.nome+": ":""}${c.testo}`));
+  return r.join("\n");
+}
+function scarica(){const b=new Blob([JSON.stringify(Store.esporta(),null,1)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=`teach-copia-${OGGI()}.json`;a.click();URL.revokeObjectURL(a.href);}
+$("#file").addEventListener("change",async e=>{const f=e.target.files[0];if(!f)return;try{const n=Store.importa(JSON.parse(await f.text()));toast(`Aggiunti: ${n.allievi} allievi, ${n.lezioni} lezioni, ${n.fili} argomenti`);}catch(x){toast("File non valido");}e.target.value="";});
+
+/* ---------- comandi ---------- */
+const setPath=(o,path,v)=>{const c=clone(o),k=path.split(".");let x=c;k.slice(0,-1).forEach(p=>{x[p]=x[p]||{};x=x[p];});x[k[k.length-1]]=v;return c;};
+document.addEventListener("change",e=>{const el=e.target;if(!el.dataset||!el.dataset.f)return;const [col,id,path]=el.dataset.f.split("|");let v=el.value;if(el.type==="number"||el.dataset.n)v=v===""?null:Number(v);Store.set(col,id,setPath(D[col][id],path,v));});
+document.addEventListener("input",e=>{if(e.target.id==="cerca"){ui.q=e.target.value;$("#righe").innerHTML=righeAllievi();}});
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.matches&&e.target.matches('input[type=text]')){const b=e.target.parentElement.querySelector("button[data-a^=add]");if(b){e.preventDefault();b.click();}}if(e.key==="Escape"&&!$("#sheet").hidden)chiudi();});
+document.addEventListener("submit",async e=>{if(e.target.id!=="login")return;e.preventDefault();try{await Store.signIn($("#em").value.trim(),$("#pw").value);sessione=await Store.session();Store.start();render();}catch(x){$("#err").textContent="Email o password non corrette.";}});
+document.addEventListener("click",async e=>{
+  if(e.target.id==="sheet"){chiudi();return;}
+  const b=e.target.closest("[data-a]");if(!b)return;
+  const d=b.dataset,a=d.a;
+  if(a==="tab")location.hash="#/"+d.t;
+  else if(a==="giorno"){ui.giorno=Number(d.g);render();}
+  else if(a==="sede"){ui.sede=d.s;render();}
+  else if(a==="nota")apriNota(d.id);
+  else if(a==="chiudi")chiudi();
+  else if(a==="apriFilo")apriFilo(d.id);
+  else if(a==="apriBlocco")apriBlocco(d.id);
+  else if(a==="ritratto")apriRitratto(d.id);
+  else if(a==="pezzo"){const al=D.allievi[ui.rit],r={capelli:"calvo",barba:"no",occhiali:"no",dettaglio:"no",maglia:"nera",...(al.ritratto||{}),[d.k]:d.v};Store.patch("allievi",ui.rit,{ritratto:r});const top=$("#sheet .in").scrollTop;disegnaRitratto();$("#sheet .in").scrollTop=top;}
+  else if(a==="come"){ui.nota.come=ui.nota.come===d.c?"":d.c;disegnaNota();}
+  else if(a==="tocco"){const t=ui.nota.tocchi,i=t.indexOf(d.id);i<0?t.push(d.id):t.splice(i,1);disegnaNota();}
+  else if(a==="salvaNota")salvaNota(false);
+  else if(a==="salvaAssente")salvaNota(true);
+  else if(a==="riprendo")Store.patch("fili",d.id,{stato:"attivo",toccato:OGGI(),rinvio:null});
+  else if(a==="rinvio")Store.patch("fili",d.id,{rinvio:piu(21)});
+  else if(a==="filo"){Store.patch("fili",d.id,{stato:d.s,toccato:OGGI()});chiudi();}
+  else if(a==="addFilo"){const i=$("#filo-"+d.id),t=i.value.trim();if(t){i.value="";Store.add("fili",{allievo:d.id,tipo:"brano",titolo:t,stato:"attivo",nota:"",toccato:OGGI()});}}
+  else if(a==="micro"){const al=D.allievi[d.id],m=clone(al.micro||[]);m[d.i].fatto=!m[d.i].fatto;Store.patch("allievi",d.id,{micro:m});}
+  else if(a==="addMicro"){const i=$("#micro-"+d.id),t=i.value.trim();if(t){i.value="";const al=D.allievi[d.id];Store.patch("allievi",d.id,{micro:[...(al.micro||[]),{t,fatto:false}]});}}
+  else if(a==="prog"){const al=D.allievi[d.id],p={...(al.programma||{})},s=p[d.b];if(!s)p[d.b]="visto";else if(s==="visto")p[d.b]="ok";else delete p[d.b];Store.patch("allievi",d.id,{programma:p});}
+  else if(a==="objStato"){
+    if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
+    setTimeout(()=>{const al=D.allievi[d.id];if(d.s==="definito"&&!al.obiettivo.testo.trim()){toast("Scrivi prima la frase delle coordinate");return;}Store.patch("allievi",d.id,{obiettivo:{...al.obiettivo,stato:d.s}});toast(d.s==="definito"?"Coordinate fissate":"Lo tengo in sospeso");},30);
+  }
+  else if(a==="cosa")Store.patch("cose",d.id,{fatta:!D.cose[d.id].fatta});
+  else if(a==="addCosa"){const i=$("#nuova"),t=i.value.trim();if(t){i.value="";Store.add("cose",{allievo:null,tipo:"mio",testo:t,fatta:false});}}
+  else if(a==="resoconto"){try{await navigator.clipboard.writeText(resoconto());toast("Resoconto copiato");}catch(x){toast("Copia non riuscita: riprova");}}
+  else if(a==="importa")$("#file").click();
+  else if(a==="esporta")scarica();
+  else if(a==="esci"){await Store.signOut();sessione=null;render();}
+});
+
+/* ---------- disegno ---------- */
+const TABS=[["oggi","Oggi"],["allievi","Allievi"],["coordinate","Coordinate"],["programma","Programma"],["cose","Cose"]];
+function rotta(){const p=location.hash.replace(/^#\/?/,"").split("/");return p[0]?p:["oggi"];}
+function render(){
+  if(!Store.OFF&&!sessione){$("#tabs").hidden=true;$("#m").innerHTML=vAccesso();return;}
+  if(!pronti){$("#m").innerHTML='<p class="mute">Carico…</p>';return;}
+  const [r,id]=rotta(),att=r==="a"?"allievi":r==="c"?"coordinate":r;
+  $("#tabs").hidden=false;
+  $("#tabs").innerHTML=TABS.map(([k,l])=>`<button class="${att===k?"on":""}" data-a="tab" data-t="${k}"${att===k?' aria-current="page"':""}><span>${l}</span></button>`).join("");
+  if(!Store.OFF&&!Object.keys(D.allievi).length){$("#m").innerHTML=`<div style="padding:40px 0"><h1>Teach</h1><p style="margin-top:16px">Il database è vuoto.</p><button class="btn wide" data-a="importa">Importa i dati degli allievi</button></div>`;return;}
+  $("#m").innerHTML=r==="a"?vProfilo(id):r==="c"?vMomento(id):r==="allievi"?vAllievi():r==="coordinate"?vCoordinate():r==="programma"?vProgramma(id):r==="cose"?vCose(id):vOggi();
+}
+let timer,sporco=false;
+function presto(){clearTimeout(timer);timer=setTimeout(()=>{const a=document.activeElement;if(a&&a.matches("input,textarea,select")&&$("#m").contains(a)){sporco=true;return;}render();},60);}
+document.addEventListener("focusout",()=>setTimeout(()=>{if(sporco){sporco=false;presto();}},120));
+window.addEventListener("hashchange",()=>{render();window.scrollTo(0,0);});
+Object.keys(D).forEach(c=>Store.subscribe(c,s=>{D[c]=s;presto();}));
+Store.onPulled(()=>{pronti=true;presto();});
+Store.onStatus(s=>{$("#sync").textContent=s.error?s.error:s.demo?"Allievi finti":s.locale?"Solo su questo Mac":s.pending?`${s.pending} da inviare`:s.online?"Sincronizzata":"Senza rete";});
+(async()=>{sessione=await Store.session();if(Store.OFF||sessione)Store.start();render();if("serviceWorker" in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js");})();
+</script></body></html>
