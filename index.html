@@ -79,10 +79,10 @@ label.q small{display:block;font-weight:400;color:var(--mute);margin-top:3px;fon
 .prep .tag{margin-top:8px}
 .nota{border-left:3px solid currentColor;padding:1px 0 1px 11px;margin:8px 0}
 .pg{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding-bottom:34px}
-.pc{display:block;border-radius:26px;padding:13px 8px 0;text-align:center;text-decoration:none;font-weight:700;font-size:16px;line-height:1.14;overflow:hidden}
+.pc{display:flex;flex-direction:column;align-items:center;border-radius:26px;padding:13px 8px 0;text-align:center;text-decoration:none;font-weight:700;font-size:16px;line-height:1.14;overflow:hidden}
 .pc:nth-child(even){transform:translateY(34px)}
 .pc small{display:block;font-weight:500;font-size:14px;margin-top:3px;color:var(--mute)}
-.pc svg{display:block;width:100%;margin-top:6px}
+.pc svg{display:block;width:100%;margin-top:auto;padding-top:6px}
 .pc .tag{margin-top:6px}
 .hero{margin:0 calc(var(--gut)*-1);padding:6px var(--gut) 44px;text-align:center;position:relative;border-radius:0 0 0 0}
 .hero .bk{position:absolute;left:var(--gut);top:6px}
@@ -139,6 +139,9 @@ summary{cursor:pointer;color:var(--mute);padding:8px 0;font-weight:600}
   .cols>div>section:first-child{border-top:0}
   .giorno{display:grid;grid-template-columns:1fr 1fr;gap:0 16px;align-items:start}
   .pg{grid-template-columns:repeat(5,1fr)}
+  /* lo sfalsamento va per colonna: la seconda e la quarta scendono sempre, così le righe non si scontrano */
+  .pc:nth-child(even){transform:none}
+  .pc:nth-child(5n+2),.pc:nth-child(5n+4){transform:translateY(34px)}
   .fg{grid-template-columns:repeat(4,1fr)}
   .hero{border-radius:28px;margin:0}.low{margin:-28px 0 0;padding:24px 24px 0}
 }
